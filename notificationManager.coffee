@@ -133,4 +133,4 @@ manager.add warn1
 #manager.setDisplayMethod("priority")
 #alert(manager.get().toSource())
 
-alert(manager.listify("ul").toSource())
+alert(manager.listifyNotifications("ul").toSource())
