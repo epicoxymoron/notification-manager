@@ -14,46 +14,46 @@ class NotificationManager
 	# Take in a list of bucket names ordered by their priority and a display
 	# method (optional)
 	constructor: (buckets, @displayMethod = "priority") ->
-		@buckets = {}
-		@bucketList = []
+		@_buckets = {}
+		@_bucketList = []
 		for bucket in buckets
-			@buckets[bucket] = []
-			@bucketList.push(bucket)
+			@_buckets[bucket] = []
+			@_bucketList.push(bucket)
 
 	# Clears a single bucket if a bucket name is given, or all buckets if 
 	# called with no arguments.
 	clear: (bucketName = null) ->
 		if bucketName is null
-			for bucket in @buckets
-				@buckets[bucketName] = []
+			for bucket in @_buckets
+				@_buckets[bucketName] = []
 		else
-			@buckets[bucketName] = []
+			@_buckets[bucketName] = []
 		true
 
 	# Adds a notification to a bucket.  If the bucket doesn't exist, it will
 	# be created at the lowest priority
 	add: (note) ->
-		if note.bucket in @bucketList
-			@buckets[note.bucket].push(note.message)
+		if note.bucket in @_bucketList
+			@_buckets[note.bucket].push(note.message)
 		else
-			@buckets[note.bucket] = [note.message]
-			@bucketList.push(note.bucket)
+			@_buckets[note.bucket] = [note.message]
+			@_bucketList.push(note.bucket)
 		true
 
 	# Gets the list of messages for a bucket, or if the bucket doesn't exist,
 	# returns an empty list
-	getBucket: (bucketName) ->
-		return @buckets[bucketName] or []
+	bucket: (bucketName) ->
+		return @_buckets[bucketName] or []
 
 	# Gets a list of registered buckets
 	buckets: ->
-		return @bucketList
+		return @_bucketList
 
 	# Magically returns the number of messages stored across all buckets.
 	# To get the number of messages in a single bucket, it's just
 	# `manager.get(bucketName).length`
 	totalSize: ->
-		(@buckets[x].length for x of @buckets).reduce (t, s) -> t + s
+		(@_buckets[x].length for x of @_buckets).reduce (t, s) -> t + s
 
 	# Sets the display method if the value is valid
 	#
@@ -71,9 +71,9 @@ class NotificationManager
 	# and what's been stored
 	notifications: ->
 		retVal = {}
-		for bkt in @bucketList
-			if @buckets[bkt].length > 0
-				retVal[bkt] = @buckets[bkt]
+		for bkt in @_bucketList
+			if @_buckets[bkt].length > 0
+				retVal[bkt] = @_buckets[bkt]
 				if @displayMethod == "priority"
 					return retVal
 		return retVal
@@ -94,7 +94,7 @@ class NotificationManager
 		# only do the notifications we care about
 		if bucket isnt null
 			notes = {}
-			notes[bucket] = @getBucket(bucket)
+			notes[bucket] = @bucket(bucket)
 		else
 			notes = @notifications()
 		for bucket of notes
@@ -140,6 +140,15 @@ manager.add new Notification "test", "test: test message"
 #manager.setDisplayMethod("all")
 #alert(manager.get().toSource())
 
-alert(manager.listify("ul").toSource())
-alert(manager.listify("ul", WARN).toSource())
-alert(manager.listify("ul", 'bucket-that-doesnt-exist').toSource())
+#alert(manager.listify("ul").toSource())
+#alert(manager.listify("ul", WARN).toSource())
+#alert(manager.listify("ul", 'bucket-that-doesnt-exist').toSource())
+
+buckets = manager.buckets()
+lists = manager.listify("ul")
+for div in buckets
+	alert("$('##{div}').hide()")
+for div of lists
+	alert("$('##{div}').append(#{lists[div]})")
+	alert("$('##{div}').show()")
+
