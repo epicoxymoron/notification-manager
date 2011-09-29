@@ -11,16 +11,9 @@ class Notification
 # important enough to display
 class NotificationManager
 
-	# How many buckets should we return?
-	#
-	# Valid values are "all" and "priority".
-	# "all" will return all messages no matter their bucket, whereas
-	# "priority" will return all messages in the highest existent priority
-	@displayMethod = "priority"
-
 	# Take in a list of bucket names ordered by their priority and a display
 	# method (optional)
-	constructor: (buckets, @displayMethod = "all") ->
+	constructor: (buckets, @displayMethod = "priority") ->
 		@buckets = {}
 		@bucketList = []
 		for bucket in buckets
@@ -63,6 +56,10 @@ class NotificationManager
 		(@buckets[x].length for x of @buckets).reduce (t, s) -> t + s
 
 	# Sets the display method if the value is valid
+	#
+	# Valid values are "all" and "priority".
+	# "all" will return all messages no matter their bucket, whereas
+	# "priority" will return all messages in the highest existent priority
 	setDisplayMethod: (method) ->
 		if method in ["all", "priority"]
 			@displayMethod = method
