@@ -21,7 +21,7 @@ class NotificationManager
 	# Take in a list of bucket names ordered by their priority and a display
 	# method (optional)
 	constructor: (buckets, @displayMethod = "all") ->
-		@buckets = {} 
+		@buckets = {}
 		@bucketList = []
 		for bucket in buckets
 			@buckets[bucket] = []
@@ -80,6 +80,31 @@ class NotificationManager
 				if @displayMethod == "priority"
 					return retVal
 		return retVal
+	
+	# Creates an HTML list out of the relevant notifications.  Pass in a
+	# list container (either "ol" or "ul") and you'll get back a map of:
+	#
+	#	{
+	#		bucket1: "<ol><li>Message 1</li><li>Message 2</li>"
+	#		bucket2: "<ol><li>Message A</li><li>Message B</li>"
+	#	}
+	listifyNotifications: (container) ->
+		# only accept ul and ol for now
+		if container not in ["ul", "ol"]
+			return {}
+		inner = "li"
+		retVal = "<#{container}>"
+		# only do the notifications we care about
+		notes = @notifications()
+		for bucket of @notifications()
+			messages = notes[bucket]
+			messageList = "<#{container}>" 
+			for message in messages
+				message = "<#{inner}>#{message}</#{inner}>"
+				messageList += message
+			messageList += "</#{container}>"
+			notes[bucket] = messageList
+		return notes
 
 ERROR = "error"
 WARN = "warning"
@@ -104,6 +129,8 @@ manager.add warn1
 #alert(manager.get("errors").toSource())
 #alert(manager.get("nonexistent-bucket").toSource())
 
-alert(manager.get().toSource());
-manager.setDisplayMethod("priority");
-alert(manager.get().toSource());
+#alert(manager.get().toSource())
+#manager.setDisplayMethod("priority")
+#alert(manager.get().toSource())
+
+alert(manager.listify("ul").toSource())
