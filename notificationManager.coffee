@@ -85,21 +85,30 @@ class NotificationManager
 	#		bucket1: "<ol><li>Message 1</li><li>Message 2</li>"
 	#		bucket2: "<ol><li>Message A</li><li>Message B</li>"
 	#	}
-	listifyNotifications: (container) ->
+	listify: (container, bucket = null) ->
 		# only accept ul and ol for now
 		if container not in ["ul", "ol"]
 			return {}
 		inner = "li"
 		retVal = "<#{container}>"
 		# only do the notifications we care about
-		notes = @notifications()
-		for bucket of @notifications()
+		if bucket isnt null
+			notes = {}
+			notes[bucket] = @getBucket(bucket)
+		else
+			notes = @notifications()
+		for bucket of notes
 			messages = notes[bucket]
-			messageList = "<#{container}>" 
-			for message in messages
-				message = "<#{inner}>#{message}</#{inner}>"
-				messageList += message
-			messageList += "</#{container}>"
+			# don't put the container around an empty list.
+			# TODO: revisit this decision at some point
+			if messages.length > 0
+				messageList = "<#{container}>" 
+				for message in messages
+					message = "<#{inner}>#{message}</#{inner}>"
+					messageList += message
+				messageList += "</#{container}>"
+			else
+				messageList = ""
 			notes[bucket] = messageList
 		return notes
 
@@ -116,6 +125,7 @@ warn1 = new Notification WARN, "warning: maybe something"
 manager.add err1
 manager.add err2
 manager.add warn1
+manager.add new Notification "test", "test: test message"
 
 #alert(manager.totalSize())
 
@@ -127,7 +137,9 @@ manager.add warn1
 #alert(manager.get("nonexistent-bucket").toSource())
 
 #alert(manager.get().toSource())
-#manager.setDisplayMethod("priority")
+#manager.setDisplayMethod("all")
 #alert(manager.get().toSource())
 
-alert(manager.listifyNotifications("ul").toSource())
+alert(manager.listify("ul").toSource())
+alert(manager.listify("ul", WARN).toSource())
+alert(manager.listify("ul", 'bucket-that-doesnt-exist').toSource())
