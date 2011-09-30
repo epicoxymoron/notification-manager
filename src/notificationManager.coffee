@@ -86,10 +86,10 @@ class NotificationManager
 	# Creates an HTML list out of the relevant notifications.  Pass in a
 	# list container (either "ol" or "ul") and you'll get back a map of:
 	#
-	#	{
-	#		bucket1: "<ol><li>Message 1</li><li>Message 2</li>"
-	#		bucket2: "<ol><li>Message A</li><li>Message B</li>"
-	#	}
+	#     {
+	#       bucket1: "<ol><li>Message 1</li><li>Message 2</li>"
+	#       bucket2: "<ol><li>Message A</li><li>Message B</li>"
+	#     }
 	listify: (container, bucket = null) ->
 		# only accept ul and ol for now
 		if container not in ["ul", "ol"]
@@ -105,6 +105,7 @@ class NotificationManager
 		for bucket of notes
 			messages = notes[bucket]
 			# don't put the container around an empty list.
+			#
 			# TODO: revisit this decision at some point
 			if messages.length > 0
 				messageList = "<#{container}>"
@@ -116,44 +117,3 @@ class NotificationManager
 				messageList = ""
 			notes[bucket] = messageList
 		return notes
-
-ERROR = "error"
-WARN = "warning"
-SUCCESS = "success"
-
-manager = new NotificationManager [ERROR, WARN, SUCCESS]
-
-err1 = new Notification ERROR, "error: must do something"
-err2 = new Notification ERROR, "error: must do something else"
-warn1 = new Notification WARN, "warning: maybe something"
-
-manager.add err1
-manager.add err2
-manager.add warn1
-manager.add new Notification "test", "test: test message"
-
-#alert(manager.totalSize())
-
-#alert(manager._displayMethod)
-#manager.setDisplayMethod "priority"
-#alert(manager._displayMethod)
-
-#alert(manager.get("errors").toSource())
-#alert(manager.get("nonexistent-bucket").toSource())
-
-#alert(manager.get().toSource())
-#manager.setDisplayMethod("all")
-#alert(manager.get().toSource())
-
-#alert(manager.listify("ul").toSource())
-#alert(manager.listify("ul", WARN).toSource())
-#alert(manager.listify("ul", 'bucket-that-doesnt-exist').toSource())
-
-buckets = manager.buckets()
-lists = manager.listify("ul")
-for div in buckets
-	alert("$('##{div}').hide()")
-for div of lists
-	alert("$('##{div}').append('#{lists[div]}')")
-	alert("$('##{div}').show()")
-
