@@ -11,8 +11,8 @@ method (optional), defaulting to "priority"</p>             </td>             <t
 			<span class="vi">@_displayMethod = </span><span class="s2">&quot;priority&quot;</span></pre></div>             </td>           </tr>                               <tr id="section-7">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-7">&#182;</a>               </div>               <p>Clears a single bucket if a bucket name is given, or all buckets if 
 called with no arguments.</p>             </td>             <td class="code">               <div class="highlight"><pre>	<span class="nv">clear: </span><span class="nf">(bucketName = null) -&gt;</span>
 		<span class="k">if</span> <span class="nx">bucketName</span> <span class="o">is</span> <span class="kc">null</span>
-			<span class="k">for</span> <span class="nx">bucket</span> <span class="k">in</span> <span class="nx">@_buckets</span>
-				<span class="nx">@_buckets</span><span class="p">[</span><span class="nx">bucketName</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+			<span class="k">for</span> <span class="nx">bucket</span> <span class="k">of</span> <span class="nx">@_buckets</span>
+				<span class="nx">@_buckets</span><span class="p">[</span><span class="nx">bucket</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
 		<span class="k">else</span>
 			<span class="nx">@_buckets</span><span class="p">[</span><span class="nx">bucketName</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
 		<span class="kc">true</span></pre></div>             </td>           </tr>                               <tr id="section-8">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-8">&#182;</a>               </div>               <p>Adds a notification to a bucket.  If the bucket doesn't exist, it will
