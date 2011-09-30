@@ -22,20 +22,45 @@ $ ->
 		same nm._bucketList, list, "bucketList should be match the parameters"
 		same nm._displayMethod, "priority", "should have stayed with priority in the case of an invalid value"
 	
+	module "totalSize()"
+
+	test "counting", ->
+		nm = new NotificationManager
+		nm.add new Notification "a", "b"
+		equal 1, nm.totalSize()
+		nm.add new Notification "a", "b"
+		equal 2, nm.totalSize()
+		nm.add new Notification "a", "b"
+		equal 3, nm.totalSize()
+		nm.add new Notification "b", "a"
+		equal 4, nm.totalSize()
+	
+	module "clear()"
+
+	test "clear and check size", ->
+		nm = new NotificationManager
+		nm.add new Notification "a", "b"
+		nm.add new Notification "a", "b"
+		nm.add new Notification "a", "b"
+		nm.add new Notification "b", "a"
+		notEqual 0, nm.totalSize()
+		nm.clear()
+		equal 0, nm.totalSize()
+
 	module "setDisplayMethod()"
 
 	test "test with valid values", ->
 		nm = new NotificationManager
 		nm.setDisplayMethod "all"
-		equals "all", nm._displayMethod, "changed the value successfully"
+		equal "all", nm._displayMethod, "changed the value successfully"
 		nm.setDisplayMethod "priority"
-		equals "priority", nm._displayMethod, "changed the value successfully"
+		equal "priority", nm._displayMethod, "changed the value successfully"
 	
 	test "test with invalid values", ->
 		nm = new NotificationManager
 		oldValue = nm._displayMethod
 		nm.setDisplayMethod "some bad value"
-		equals oldValue, nm._displayMethod, "kept the old value"
+		equal oldValue, nm._displayMethod, "kept the old value"
 	
 	true
 

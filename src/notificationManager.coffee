@@ -27,8 +27,8 @@ class NotificationManager
 	# called with no arguments.
 	clear: (bucketName = null) ->
 		if bucketName is null
-			for bucket in @_buckets
-				@_buckets[bucketName] = []
+			for bucket of @_buckets
+				@_buckets[bucket] = []
 		else
 			@_buckets[bucketName] = []
 		true

@@ -33,15 +33,13 @@ NotificationManager = (function() {
     }
   }
   NotificationManager.prototype.clear = function(bucketName) {
-    var bucket, _i, _len, _ref;
+    var bucket;
     if (bucketName == null) {
       bucketName = null;
     }
     if (bucketName === null) {
-      _ref = this._buckets;
-      for (_i = 0, _len = _ref.length; _i < _len; _i++) {
-        bucket = _ref[_i];
-        this._buckets[bucketName] = [];
+      for (bucket in this._buckets) {
+        this._buckets[bucket] = [];
       }
     } else {
       this._buckets[bucketName] = [];

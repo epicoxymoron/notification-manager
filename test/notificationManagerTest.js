@@ -23,21 +23,46 @@ $(function() {
     same(nm._bucketList, list, "bucketList should be match the parameters");
     return same(nm._displayMethod, "priority", "should have stayed with priority in the case of an invalid value");
   });
+  module("totalSize()");
+  test("counting", function() {
+    var nm;
+    nm = new NotificationManager;
+    nm.add(new Notification("a", "b"));
+    equal(1, nm.totalSize());
+    nm.add(new Notification("a", "b"));
+    equal(2, nm.totalSize());
+    nm.add(new Notification("a", "b"));
+    equal(3, nm.totalSize());
+    nm.add(new Notification("b", "a"));
+    return equal(4, nm.totalSize());
+  });
+  module("clear()");
+  test("clear and check size", function() {
+    var nm;
+    nm = new NotificationManager;
+    nm.add(new Notification("a", "b"));
+    nm.add(new Notification("a", "b"));
+    nm.add(new Notification("a", "b"));
+    nm.add(new Notification("b", "a"));
+    notEqual(0, nm.totalSize());
+    nm.clear();
+    return equal(0, nm.totalSize());
+  });
   module("setDisplayMethod()");
   test("test with valid values", function() {
     var nm;
     nm = new NotificationManager;
     nm.setDisplayMethod("all");
-    equals("all", nm._displayMethod, "changed the value successfully");
+    equal("all", nm._displayMethod, "changed the value successfully");
     nm.setDisplayMethod("priority");
-    return equals("priority", nm._displayMethod, "changed the value successfully");
+    return equal("priority", nm._displayMethod, "changed the value successfully");
   });
   test("test with invalid values", function() {
     var nm, oldValue;
     nm = new NotificationManager;
     oldValue = nm._displayMethod;
     nm.setDisplayMethod("some bad value");
-    return equals(oldValue, nm._displayMethod, "kept the old value");
+    return equal(oldValue, nm._displayMethod, "kept the old value");
   });
   return true;
 });
