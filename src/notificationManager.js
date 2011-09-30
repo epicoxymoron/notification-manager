@@ -66,19 +66,7 @@ NotificationManager = (function() {
     return this._bucketList;
   };
   NotificationManager.prototype.totalSize = function() {
-    var lengths, sum, x;
-    lengths = (function() {
-      var _results;
-      _results = [];
-      for (x in this._buckets) {
-        _results.push(this._buckets[x].length);
-      }
-      return _results;
-    }).call(this);
-    sum = function(a, b) {
-      return a + b;
-    };
-    lengths.reduce(sum, 0);
+    var x;
     return ((function() {
       var _results;
       _results = [];
@@ -86,8 +74,8 @@ NotificationManager = (function() {
         _results.push(this._buckets[x].length);
       }
       return _results;
-    }).call(this)).reduce((function(t, s) {
-      return t + s;
+    }).call(this)).reduce((function(a, b) {
+      return a + b;
     }), 0);
   };
   NotificationManager.prototype.setDisplayMethod = function(method) {

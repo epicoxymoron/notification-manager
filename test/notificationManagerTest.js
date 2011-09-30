@@ -53,16 +53,16 @@ $(function() {
   test("test with valid values", function() {
     var nm;
     nm = new NotificationManager;
-    nm.setDisplayMethod("all");
+    equal(true, nm.setDisplayMethod("all"));
     equal("all", nm._displayMethod, "changed the value successfully");
-    nm.setDisplayMethod("priority");
+    equal(true, nm.setDisplayMethod("priority"));
     return equal("priority", nm._displayMethod, "changed the value successfully");
   });
   test("test with invalid values", function() {
     var nm, oldValue;
     nm = new NotificationManager;
     oldValue = nm._displayMethod;
-    nm.setDisplayMethod("some bad value");
+    equal(false, nm.setDisplayMethod("some bad value"));
     return equal(oldValue, nm._displayMethod, "kept the old value");
   });
   module("buckets()");
@@ -163,9 +163,18 @@ $(function() {
     return same(nm.notifications(), expected, "should have excluded any empty buckets");
   });
   test("displayMethod: 'all' --> handles 0 messages correctly", function() {
-    var nm;
+    var nm, size, x;
     nm = new NotificationManager(["a", "b", "c"], "all");
     equal(nm._displayMethod, "all", "check that value actually stuck");
+    size = ((function() {
+      var _results;
+      _results = [];
+      for (x in nm.notifications()) {
+        _results.push(x);
+      }
+      return _results;
+    })()).length;
+    equal(size, 0, "shouldn't bring back any buckets");
     return same(nm.notifications(), {}, "should have returned an empty map");
   });
   test("displayMethod = priority --> only one bucket comes back", function() {
@@ -295,9 +304,18 @@ $(function() {
     return equal(bucket, "a", "should bring back the correct bucket");
   });
   test("displayMethod: 'priority' --> handles 0 messages correctly", function() {
-    var nm;
+    var nm, size, x;
     nm = new NotificationManager(["a", "b", "c"], "priority");
     equal(nm._displayMethod, "priority", "check that value actually stuck");
+    size = ((function() {
+      var _results;
+      _results = [];
+      for (x in nm.notifications()) {
+        _results.push(x);
+      }
+      return _results;
+    })()).length;
+    equal(size, 0, "shouldn't bring back any buckets");
     return same(nm.notifications(), {}, "should have returned an empty map");
   });
   return true;

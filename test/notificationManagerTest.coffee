@@ -52,15 +52,15 @@ $ ->
 
 	test "test with valid values", ->
 		nm = new NotificationManager
-		nm.setDisplayMethod "all"
+		equal true, nm.setDisplayMethod "all"
 		equal "all", nm._displayMethod, "changed the value successfully"
-		nm.setDisplayMethod "priority"
+		equal true, nm.setDisplayMethod "priority"
 		equal "priority", nm._displayMethod, "changed the value successfully"
 	
 	test "test with invalid values", ->
 		nm = new NotificationManager
 		oldValue = nm._displayMethod
-		nm.setDisplayMethod "some bad value"
+		equal false, nm.setDisplayMethod "some bad value"
 		equal oldValue, nm._displayMethod, "kept the old value"
 	
 	module "buckets()"
@@ -168,6 +168,8 @@ $ ->
 		nm = new NotificationManager ["a", "b", "c"], "all"
 		equal nm._displayMethod, "all", "check that value actually stuck"
 
+		size = (x for x of nm.notifications()).length
+		equal size, 0, "shouldn't bring back any buckets"
 		same nm.notifications(), {}, "should have returned an empty map"
 
 	test "displayMethod = priority --> only one bucket comes back", ->
@@ -231,6 +233,8 @@ $ ->
 		nm = new NotificationManager ["a", "b", "c"], "priority"
 		equal nm._displayMethod, "priority", "check that value actually stuck"
 
+		size = (x for x of nm.notifications()).length
+		equal size, 0, "shouldn't bring back any buckets"
 		same nm.notifications(), {}, "should have returned an empty map"
 
 	true
