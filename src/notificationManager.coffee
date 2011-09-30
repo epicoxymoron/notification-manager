@@ -12,13 +12,16 @@ class Notification
 class NotificationManager
 
 	# Take in a list of bucket names ordered by their priority and a display
-	# method (optional)
-	constructor: (buckets, @displayMethod = "priority") ->
+	# method (optional), defaulting to "priority"
+	constructor: (buckets = [], displayMethod = "priority") ->
 		@_buckets = {}
 		@_bucketList = []
 		for bucket in buckets
 			@_buckets[bucket] = []
 			@_bucketList.push(bucket)
+		# take care to handle badly formed input
+		if not @setDisplayMethod displayMethod
+			@_displayMethod = "priority"
 
 	# Clears a single bucket if a bucket name is given, or all buckets if 
 	# called with no arguments.
@@ -33,6 +36,8 @@ class NotificationManager
 	# Adds a notification to a bucket.  If the bucket doesn't exist, it will
 	# be created at the lowest priority
 	add: (note) ->
+		if not note.bucket?
+			false
 		if note.bucket in @_bucketList
 			@_buckets[note.bucket].push(note.message)
 		else
@@ -62,7 +67,7 @@ class NotificationManager
 	# "priority" will return all messages in the highest existent priority
 	setDisplayMethod: (method) ->
 		if method in ["all", "priority"]
-			@displayMethod = method
+			@_displayMethod = method
 			true
 		else
 			false
@@ -74,7 +79,7 @@ class NotificationManager
 		for bkt in @_bucketList
 			if @_buckets[bkt].length > 0
 				retVal[bkt] = @_buckets[bkt]
-				if @displayMethod == "priority"
+				if @_displayMethod == "priority"
 					return retVal
 		return retVal
 	
@@ -102,7 +107,7 @@ class NotificationManager
 			# don't put the container around an empty list.
 			# TODO: revisit this decision at some point
 			if messages.length > 0
-				messageList = "<#{container}>" 
+				messageList = "<#{container}>"
 				for message in messages
 					message = "<#{inner}>#{message}</#{inner}>"
 					messageList += message
@@ -129,9 +134,9 @@ manager.add new Notification "test", "test: test message"
 
 #alert(manager.totalSize())
 
-#alert(manager.displayMethod)
+#alert(manager._displayMethod)
 #manager.setDisplayMethod "priority"
-#alert(manager.displayMethod)
+#alert(manager._displayMethod)
 
 #alert(manager.get("errors").toSource())
 #alert(manager.get("nonexistent-bucket").toSource())
@@ -149,6 +154,6 @@ lists = manager.listify("ul")
 for div in buckets
 	alert("$('##{div}').hide()")
 for div of lists
-	alert("$('##{div}').append(#{lists[div]})")
+	alert("$('##{div}').append('#{lists[div]}')")
 	alert("$('##{div}').show()")
 
