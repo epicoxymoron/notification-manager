@@ -5,22 +5,22 @@ $ ->
 	test "no arguments", ->
 		nm = new NotificationManager
 		same nm._bucketList, [], "bucketList should be empty initially"
-		same nm._displayMethod, "priority", "priority should be the displayMethod initially"
+		equal nm._displayMethod, "priority", "priority should be the displayMethod initially"
 	
 	test "1 argument", ->
 		list = ["A", "B", "C"]
 		nm = new NotificationManager list
 		same nm._bucketList, list, "bucketList should be match the parameters"
-		same nm._displayMethod, "priority", "priority should be the displayMethod by default"
+		equal nm._displayMethod, "priority", "priority should be the displayMethod by default"
 	
 	test "2 arguments", ->
 		list = ["A", "B", "C"]
 		nm = new NotificationManager list, "all"
 		same nm._bucketList, list, "bucketList should be match the parameters"
-		same nm._displayMethod, "all", "should have accepted 'all'"
+		equal nm._displayMethod, "all", "should have accepted 'all'"
 		nm = new NotificationManager list, "some bad value"
 		same nm._bucketList, list, "bucketList should be match the parameters"
-		same nm._displayMethod, "priority", "should have stayed with priority in the case of an invalid value"
+		equal nm._displayMethod, "priority", "should have stayed with priority in the case of an invalid value"
 	
 	module "totalSize()"
 
@@ -38,15 +38,64 @@ $ ->
 	
 	module "clear()"
 
-	test "clear and check size", ->
+	test "clear all buckets", ->
 		nm = new NotificationManager
 		nm.add new Notification "a", "b"
 		nm.add new Notification "a", "b"
 		nm.add new Notification "a", "b"
 		nm.add new Notification "b", "a"
 		notEqual 0, nm.totalSize()
-		nm.clear()
+		ok nm.clear()
 		equal 0, nm.totalSize()
+
+	test "clear single bucket", ->
+		nm = new NotificationManager
+		nm.add new Notification "a", "b"
+		nm.add new Notification "a", "b"
+		nm.add new Notification "a", "b"
+		nm.add new Notification "b", "a"
+		notEqual 0, nm.totalSize()
+		
+		ok nm.clear("a")
+		equal 1, nm.totalSize()
+		
+		expected =
+			b: ["a"]
+		same nm.notifications(), {b: ["a"]}
+		same nm.bucket("a"), []
+	
+
+	test "clear nonexistant bucket", ->
+		nm = new NotificationManager
+		nm.add new Notification "a", "b"
+		nm.add new Notification "a", "b"
+		nm.add new Notification "a", "b"
+		nm.add new Notification "b", "a"
+		equal nm.totalSize(), 4
+		ok nm.clear("c")
+		equal nm.totalSize(), 4
+
+	test "clear is idempotent", ->
+		nm = new NotificationManager
+		nm.add new Notification "a", "b"
+		nm.add new Notification "a", "b"
+		nm.add new Notification "a", "b"
+		nm.add new Notification "b", "a"
+		equal nm.totalSize(), 4
+
+		ok nm.clear("a")
+		equal nm.totalSize(), 1
+		ok nm.clear("a")
+		equal nm.totalSize(), 1
+		ok nm.clear("a")
+		equal nm.totalSize(), 1
+
+		ok nm.clear("b")
+		equal nm.totalSize(), 0
+		ok nm.clear("b")
+		equal nm.totalSize(), 0
+		ok nm.clear("b")
+		equal nm.totalSize(), 0
 
 	module "setDisplayMethod()"
 

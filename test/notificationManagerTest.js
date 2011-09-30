@@ -4,24 +4,24 @@ $(function() {
     var nm;
     nm = new NotificationManager;
     same(nm._bucketList, [], "bucketList should be empty initially");
-    return same(nm._displayMethod, "priority", "priority should be the displayMethod initially");
+    return equal(nm._displayMethod, "priority", "priority should be the displayMethod initially");
   });
   test("1 argument", function() {
     var list, nm;
     list = ["A", "B", "C"];
     nm = new NotificationManager(list);
     same(nm._bucketList, list, "bucketList should be match the parameters");
-    return same(nm._displayMethod, "priority", "priority should be the displayMethod by default");
+    return equal(nm._displayMethod, "priority", "priority should be the displayMethod by default");
   });
   test("2 arguments", function() {
     var list, nm;
     list = ["A", "B", "C"];
     nm = new NotificationManager(list, "all");
     same(nm._bucketList, list, "bucketList should be match the parameters");
-    same(nm._displayMethod, "all", "should have accepted 'all'");
+    equal(nm._displayMethod, "all", "should have accepted 'all'");
     nm = new NotificationManager(list, "some bad value");
     same(nm._bucketList, list, "bucketList should be match the parameters");
-    return same(nm._displayMethod, "priority", "should have stayed with priority in the case of an invalid value");
+    return equal(nm._displayMethod, "priority", "should have stayed with priority in the case of an invalid value");
   });
   module("totalSize()");
   test("counting", function() {
@@ -38,7 +38,7 @@ $(function() {
     return equal(4, nm.totalSize());
   });
   module("clear()");
-  test("clear and check size", function() {
+  test("clear all buckets", function() {
     var nm;
     nm = new NotificationManager;
     nm.add(new Notification("a", "b"));
@@ -46,8 +46,58 @@ $(function() {
     nm.add(new Notification("a", "b"));
     nm.add(new Notification("b", "a"));
     notEqual(0, nm.totalSize());
-    nm.clear();
+    ok(nm.clear());
     return equal(0, nm.totalSize());
+  });
+  test("clear single bucket", function() {
+    var expected, nm;
+    nm = new NotificationManager;
+    nm.add(new Notification("a", "b"));
+    nm.add(new Notification("a", "b"));
+    nm.add(new Notification("a", "b"));
+    nm.add(new Notification("b", "a"));
+    notEqual(0, nm.totalSize());
+    ok(nm.clear("a"));
+    equal(1, nm.totalSize());
+    expected = {
+      b: ["a"]
+    };
+    same(nm.notifications(), {
+      b: ["a"]
+    });
+    return same(nm.bucket("a"), []);
+  });
+  test("clear nonexistant bucket", function() {
+    var nm;
+    nm = new NotificationManager;
+    nm.add(new Notification("a", "b"));
+    nm.add(new Notification("a", "b"));
+    nm.add(new Notification("a", "b"));
+    nm.add(new Notification("b", "a"));
+    equal(nm.totalSize(), 4);
+    ok(nm.clear("c"));
+    return equal(nm.totalSize(), 4);
+  });
+  test("clear is idempotent", function() {
+    var nm;
+    nm = new NotificationManager;
+    nm.add(new Notification("a", "b"));
+    nm.add(new Notification("a", "b"));
+    nm.add(new Notification("a", "b"));
+    nm.add(new Notification("b", "a"));
+    equal(nm.totalSize(), 4);
+    ok(nm.clear("a"));
+    equal(nm.totalSize(), 1);
+    ok(nm.clear("a"));
+    equal(nm.totalSize(), 1);
+    ok(nm.clear("a"));
+    equal(nm.totalSize(), 1);
+    ok(nm.clear("b"));
+    equal(nm.totalSize(), 0);
+    ok(nm.clear("b"));
+    equal(nm.totalSize(), 0);
+    ok(nm.clear("b"));
+    return equal(nm.totalSize(), 0);
   });
   module("setDisplayMethod()");
   test("test with valid values", function() {
