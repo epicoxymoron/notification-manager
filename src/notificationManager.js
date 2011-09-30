@@ -66,7 +66,19 @@ NotificationManager = (function() {
     return this._bucketList;
   };
   NotificationManager.prototype.totalSize = function() {
-    var x;
+    var lengths, sum, x;
+    lengths = (function() {
+      var _results;
+      _results = [];
+      for (x in this._buckets) {
+        _results.push(this._buckets[x].length);
+      }
+      return _results;
+    }).call(this);
+    sum = function(a, b) {
+      return a + b;
+    };
+    lengths.reduce(sum, 0);
     return ((function() {
       var _results;
       _results = [];
@@ -74,9 +86,9 @@ NotificationManager = (function() {
         _results.push(this._buckets[x].length);
       }
       return _results;
-    }).call(this)).reduce(function(t, s) {
+    }).call(this)).reduce((function(t, s) {
       return t + s;
-    });
+    }), 0);
   };
   NotificationManager.prototype.setDisplayMethod = function(method) {
     if (method === "all" || method === "priority") {

@@ -58,7 +58,7 @@ class NotificationManager
 	# To get the number of messages in a single bucket, it's just
 	# `manager.get(bucketName).length`
 	totalSize: ->
-		(@_buckets[x].length for x of @_buckets).reduce (t, s) -> t + s
+		(@_buckets[x].length for x of @_buckets).reduce ((a, b) -> a + b), 0
 
 	# Sets the display method if the value is valid
 	#
