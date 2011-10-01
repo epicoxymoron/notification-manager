@@ -4,16 +4,18 @@ $(function() {
     var nm;
     nm = new NotificationManager;
     same(nm._bucketList, [], "bucketList should be empty initially");
-    return equal(nm._displayMethod, "priority", "priority should be the displayMethod initially");
+    equal(nm._displayMethod, "priority", "priority should be the displayMethod initially");
+    return equal(nm._displayThreshold, void 0, "because the method isn't threshold");
   });
-  test("1 argument", function() {
+  test("default display method", function() {
     var list, nm;
     list = ["A", "B", "C"];
     nm = new NotificationManager(list);
     same(nm._bucketList, list, "bucketList should be match the parameters");
-    return equal(nm._displayMethod, "priority", "priority should be the displayMethod by default");
+    equal(nm._displayMethod, "priority", "priority should be the displayMethod by default");
+    return equal(nm._displayThreshold, void 0, "because the method isn't threshold");
   });
-  test("2 arguments", function() {
+  test("setting display method", function() {
     var list, nm;
     list = ["A", "B", "C"];
     nm = new NotificationManager(list, "all");
@@ -21,7 +23,19 @@ $(function() {
     equal(nm._displayMethod, "all", "should have accepted 'all'");
     nm = new NotificationManager(list, "some bad value");
     same(nm._bucketList, list, "bucketList should be match the parameters");
-    return equal(nm._displayMethod, "priority", "should have stayed with priority in the case of an invalid value");
+    equal(nm._displayMethod, "priority", "should have stayed with priority in the case of an invalid value");
+    return equal(nm._displayThreshold, void 0, "because the method isn't threshold");
+  });
+  test("using display args", function() {
+    var nm;
+    nm = new NotificationManager(["a", "b", "c"], "threshold", "b");
+    same(nm._bucketList, ["a", "b", "c"], "bucketList should be match the parameters");
+    equal(nm._displayMethod, "threshold", "should have accepted 'threshold'");
+    equal(nm._displayThreshold, "b", "should have accepted the display argument");
+    nm = new NotificationManager(["a", "b", "c"], "threshold", "z");
+    same(nm._bucketList, ["a", "b", "c"], "bucketList should be match the parameters");
+    equal(nm._displayMethod, "priority", "should have rejected 'threshold' because of the invalid argument");
+    return equal(nm._displayThreshold, void 0, "because 'threshold' was rejected, should be empty");
   });
   module("totalSize()");
   test("counting", function() {
@@ -50,7 +64,7 @@ $(function() {
     return equal(0, nm.totalSize());
   });
   test("clear single bucket", function() {
-    var expected, nm;
+    var nm;
     nm = new NotificationManager;
     nm.add(new Notification("a", "b"));
     nm.add(new Notification("a", "b"));
@@ -59,12 +73,7 @@ $(function() {
     notEqual(0, nm.totalSize());
     ok(nm.clear("a"));
     equal(1, nm.totalSize());
-    expected = {
-      b: ["a"]
-    };
-    same(nm.notifications(), {
-      b: ["a"]
-    });
+    same(nm.notifications(), ["a"]);
     return same(nm.bucket("a"), []);
   });
   test("clear nonexistant bucket", function() {
@@ -102,17 +111,21 @@ $(function() {
   module("setDisplayMethod()");
   test("test with valid values", function() {
     var nm;
-    nm = new NotificationManager;
-    equal(true, nm.setDisplayMethod("all"));
+    nm = new NotificationManager(["a", "b", "c"]);
+    ok(nm.setDisplayMethod("all"));
     equal("all", nm._displayMethod, "changed the value successfully");
-    equal(true, nm.setDisplayMethod("priority"));
-    return equal("priority", nm._displayMethod, "changed the value successfully");
+    ok(nm.setDisplayMethod("priority"));
+    equal("priority", nm._displayMethod, "changed the value successfully");
+    ok(nm.setDisplayMethod("threshold", "b"));
+    return equal("threshold", nm._displayMethod, "changed the value successfully");
   });
   test("test with invalid values", function() {
     var nm, oldValue;
-    nm = new NotificationManager;
+    nm = new NotificationManager(["a", "b", "c"]);
     oldValue = nm._displayMethod;
-    equal(false, nm.setDisplayMethod("some bad value"));
+    ok(!nm.setDisplayMethod("some bad value"));
+    equal(oldValue, nm._displayMethod, "kept the old value");
+    ok(!nm.setDisplayMethod("threshold", "z"));
     return equal(oldValue, nm._displayMethod, "kept the old value");
   });
   module("buckets()");
@@ -227,133 +240,36 @@ $(function() {
     equal(size, 0, "shouldn't bring back any buckets");
     return same(nm.notifications(), {}, "should have returned an empty map");
   });
-  test("displayMethod = priority --> only one bucket comes back", function() {
-    var nm, size, x;
+  test("displayMethod = priority --> a single list comes back", function() {
+    var nm;
     nm = new NotificationManager(["a", "b", "c"], "priority");
     equal(nm._displayMethod, "priority", "check that value actually stuck");
     nm.add(new Notification("a", "message1"));
     nm.add(new Notification("a", "message2"));
     nm.add(new Notification("b", "message3"));
-    size = ((function() {
-      var _results;
-      _results = [];
-      for (x in nm.notifications()) {
-        _results.push(x);
-      }
-      return _results;
-    })()).length;
-    return equal(size, 1, "should bring back only 1 bucket");
-  });
-  test("displayMethod = priority --> only highest priority bucket gets returned", function() {
-    var bucket, nm, size, x;
-    nm = new NotificationManager(["a", "b", "c"], "priority");
-    equal(nm._displayMethod, "priority", "check that value actually stuck");
-    nm.add(new Notification("b", "message1"));
-    nm.add(new Notification("c", "message2"));
-    nm.add(new Notification("c", "message3"));
-    size = ((function() {
-      var _results;
-      _results = [];
-      for (x in nm.notifications()) {
-        _results.push(x);
-      }
-      return _results;
-    })()).length;
-    equal(size, 1, "should bring back only 1 bucket");
-    bucket = ((function() {
-      var _results;
-      _results = [];
-      for (x in nm.notifications()) {
-        _results.push(x);
-      }
-      return _results;
-    })())[0];
-    return equal(bucket, "b", "should bring back the correct bucket");
+    equal(Object.prototype.toString.call(nm.notifications()), "[object Array]", "return value is a list");
+    return same(nm.notifications(), ["message1", "message2"], "check the content");
   });
   test("displayMethod = priority --> only highest priority bucket gets returned, even if dynamically introduced", function() {
-    var bucket, nm, size, x;
+    var nm;
     nm = new NotificationManager(["a", "b", "c"], "priority");
     equal(nm._displayMethod, "priority", "check that value actually stuck");
-    nm.add(new Notification("e", "message1"));
-    nm.add(new Notification("f", "message2"));
-    nm.add(new Notification("g", "message3"));
-    size = ((function() {
-      var _results;
-      _results = [];
-      for (x in nm.notifications()) {
-        _results.push(x);
-      }
-      return _results;
-    })()).length;
-    equal(size, 1, "should bring back only 1 bucket");
-    bucket = ((function() {
-      var _results;
-      _results = [];
-      for (x in nm.notifications()) {
-        _results.push(x);
-      }
-      return _results;
-    })())[0];
-    equal(bucket, "e", "should bring back the correct bucket");
-    nm.add(new Notification("c", "message1"));
-    size = ((function() {
-      var _results;
-      _results = [];
-      for (x in nm.notifications()) {
-        _results.push(x);
-      }
-      return _results;
-    })()).length;
-    equal(size, 1, "should bring back only 1 bucket");
-    bucket = ((function() {
-      var _results;
-      _results = [];
-      for (x in nm.notifications()) {
-        _results.push(x);
-      }
-      return _results;
-    })())[0];
-    equal(bucket, "c", "should bring back the correct bucket");
-    nm.add(new Notification("b", "message1"));
-    size = ((function() {
-      var _results;
-      _results = [];
-      for (x in nm.notifications()) {
-        _results.push(x);
-      }
-      return _results;
-    })()).length;
-    equal(size, 1, "should bring back only 1 bucket");
-    bucket = ((function() {
-      var _results;
-      _results = [];
-      for (x in nm.notifications()) {
-        _results.push(x);
-      }
-      return _results;
-    })())[0];
-    equal(bucket, "b", "should bring back the correct bucket");
+    nm.add(new Notification("e", "message4"));
+    nm.add(new Notification("f", "message5"));
+    nm.add(new Notification("g", "message6"));
+    equal(Object.prototype.toString.call(nm.notifications()), "[object Array]", "return value is a list");
+    same(nm.notifications(), ["message4"], "check the content");
+    nm.add(new Notification("c", "message3"));
+    equal(Object.prototype.toString.call(nm.notifications()), "[object Array]", "return value is a list");
+    same(nm.notifications(), ["message3"], "check the content");
+    nm.add(new Notification("b", "message2"));
+    equal(Object.prototype.toString.call(nm.notifications()), "[object Array]", "return value is a list");
+    same(nm.notifications(), ["message2"], "check the content");
     nm.add(new Notification("a", "message1"));
-    size = ((function() {
-      var _results;
-      _results = [];
-      for (x in nm.notifications()) {
-        _results.push(x);
-      }
-      return _results;
-    })()).length;
-    equal(size, 1, "should bring back only 1 bucket");
-    bucket = ((function() {
-      var _results;
-      _results = [];
-      for (x in nm.notifications()) {
-        _results.push(x);
-      }
-      return _results;
-    })())[0];
-    return equal(bucket, "a", "should bring back the correct bucket");
+    equal(Object.prototype.toString.call(nm.notifications()), "[object Array]", "return value is a list");
+    return same(nm.notifications(), ["message1"], "check the content");
   });
-  test("displayMethod: 'priority' --> handles 0 messages correctly", function() {
+  test("displayMethod: priority --> handles 0 messages correctly", function() {
     var nm, size, x;
     nm = new NotificationManager(["a", "b", "c"], "priority");
     equal(nm._displayMethod, "priority", "check that value actually stuck");
@@ -367,6 +283,67 @@ $(function() {
     })()).length;
     equal(size, 0, "shouldn't bring back any buckets");
     return same(nm.notifications(), {}, "should have returned an empty map");
+  });
+  test("displayMethod = threshold --> returns all messages with a priority greater than a threshold", function() {
+    var expected, nm, size, x;
+    nm = new NotificationManager(["a", "b", "c"], "threshold", "b");
+    equal(nm._displayMethod, "threshold", "check that value actually stuck");
+    nm.add(new Notification("a", "message1"));
+    nm.add(new Notification("a", "message2"));
+    nm.add(new Notification("b", "message3"));
+    nm.add(new Notification("b", "message4"));
+    nm.add(new Notification("c", "message5"));
+    nm.add(new Notification("c", "message6"));
+    size = ((function() {
+      var _results;
+      _results = [];
+      for (x in nm.notifications()) {
+        _results.push(x);
+      }
+      return _results;
+    })()).length;
+    equal(size, 2, "should get 2 buckets back");
+    expected = {
+      a: ["message1", "message2"],
+      b: ["message3", "message4"]
+    };
+    return same(nm.notifications(), expected, "should have returned correct messages");
+  });
+  test("displayMethod = threshold --> handles 0 messages correctly", function() {
+    var nm, size, x;
+    nm = new NotificationManager(["a", "b", "c"], "threshold", "b");
+    equal(nm._displayMethod, "threshold", "check that value actually stuck");
+    size = ((function() {
+      var _results;
+      _results = [];
+      for (x in nm.notifications()) {
+        _results.push(x);
+      }
+      return _results;
+    })()).length;
+    equal(size, 0, "shouldn't bring back any buckets");
+    return same(nm.notifications(), {}, "should have returned an empty map");
+  });
+  module("Real World Usage");
+  test("logging", function() {
+    var CRITICAL, DEBUG, ERROR, FATAL, INFO, TRACE, WARN, expected, nm;
+    FATAL = "FATAL";
+    CRITICAL = "CRITICAL";
+    ERROR = "ERROR";
+    WARN = "WARN";
+    INFO = "INFO";
+    DEBUG = "DEBUG";
+    TRACE = "TRACE";
+    nm = new NotificationManager([FATAL, CRITICAL, ERROR, WARN, INFO, DEBUG, TRACE], "threshold", INFO);
+    nm.add(new Notification(DEBUG, "server is at 127.0.0.1/server/api/"));
+    nm.add(new Notification(INFO, "establishing connection with server"));
+    nm.add(new Notification(ERROR, "error contacting external server"));
+    nm.add(new Notification(FATAL, "holy crap, the server caught on fire"));
+    expected = {};
+    expected[FATAL] = ["holy crap, the server caught on fire"];
+    expected[INFO] = ["establishing connection with server"];
+    expected[ERROR] = ["error contacting external server"];
+    return same(nm.notifications(), expected, "should match expected output exactly");
   });
   return true;
 });

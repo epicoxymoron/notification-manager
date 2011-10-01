@@ -6,14 +6,16 @@ $ ->
 		nm = new NotificationManager
 		same nm._bucketList, [], "bucketList should be empty initially"
 		equal nm._displayMethod, "priority", "priority should be the displayMethod initially"
+		equal nm._displayThreshold, undefined, "because the method isn't threshold"
 	
-	test "1 argument", ->
+	test "default display method", ->
 		list = ["A", "B", "C"]
 		nm = new NotificationManager list
 		same nm._bucketList, list, "bucketList should be match the parameters"
 		equal nm._displayMethod, "priority", "priority should be the displayMethod by default"
+		equal nm._displayThreshold, undefined, "because the method isn't threshold"
 	
-	test "2 arguments", ->
+	test "setting display method", ->
 		list = ["A", "B", "C"]
 		nm = new NotificationManager list, "all"
 		same nm._bucketList, list, "bucketList should be match the parameters"
@@ -21,6 +23,19 @@ $ ->
 		nm = new NotificationManager list, "some bad value"
 		same nm._bucketList, list, "bucketList should be match the parameters"
 		equal nm._displayMethod, "priority", "should have stayed with priority in the case of an invalid value"
+		equal nm._displayThreshold, undefined, "because the method isn't threshold"
+	
+	test "using display args", ->
+		nm = new NotificationManager ["a", "b", "c"], "threshold", "b"
+		same nm._bucketList, ["a", "b", "c"], "bucketList should be match the parameters"
+		equal nm._displayMethod, "threshold", "should have accepted 'threshold'"
+		equal nm._displayThreshold, "b", "should have accepted the display argument"
+
+		nm = new NotificationManager ["a", "b", "c"], "threshold", "z"
+		same nm._bucketList, ["a", "b", "c"], "bucketList should be match the parameters"
+		equal nm._displayMethod, "priority", "should have rejected 'threshold' because of the invalid argument"
+		equal nm._displayThreshold, undefined, "because 'threshold' was rejected, should be empty"
+
 	
 	module "totalSize()"
 
@@ -59,9 +74,7 @@ $ ->
 		ok nm.clear("a")
 		equal 1, nm.totalSize()
 		
-		expected =
-			b: ["a"]
-		same nm.notifications(), {b: ["a"]}
+		same nm.notifications(), ["a"]
 		same nm.bucket("a"), []
 	
 
@@ -100,16 +113,20 @@ $ ->
 	module "setDisplayMethod()"
 
 	test "test with valid values", ->
-		nm = new NotificationManager
-		equal true, nm.setDisplayMethod "all"
+		nm = new NotificationManager ["a", "b", "c"]
+		ok nm.setDisplayMethod "all"
 		equal "all", nm._displayMethod, "changed the value successfully"
-		equal true, nm.setDisplayMethod "priority"
+		ok nm.setDisplayMethod "priority"
 		equal "priority", nm._displayMethod, "changed the value successfully"
+		ok nm.setDisplayMethod "threshold", "b"
+		equal "threshold", nm._displayMethod, "changed the value successfully"
 	
 	test "test with invalid values", ->
-		nm = new NotificationManager
+		nm = new NotificationManager ["a", "b", "c"]
 		oldValue = nm._displayMethod
-		equal false, nm.setDisplayMethod "some bad value"
+		ok not nm.setDisplayMethod "some bad value"
+		equal oldValue, nm._displayMethod, "kept the old value"
+		ok not nm.setDisplayMethod "threshold", "z"
 		equal oldValue, nm._displayMethod, "kept the old value"
 	
 	module "buckets()"
@@ -221,7 +238,7 @@ $ ->
 		equal size, 0, "shouldn't bring back any buckets"
 		same nm.notifications(), {}, "should have returned an empty map"
 
-	test "displayMethod = priority --> only one bucket comes back", ->
+	test "displayMethod = priority --> a single list comes back", ->
 		nm = new NotificationManager ["a", "b", "c"], "priority"
 		equal nm._displayMethod, "priority", "check that value actually stuck"
 
@@ -229,56 +246,33 @@ $ ->
 		nm.add new Notification "a", "message2"
 		nm.add new Notification "b", "message3"
 		
-		size = (x for x of nm.notifications()).length
-		equal size, 1, "should bring back only 1 bucket"
+		equal Object::toString.call(nm.notifications()), "[object Array]", "return value is a list"
+		same nm.notifications(), ["message1", "message2"], "check the content"
 		
-	test "displayMethod = priority --> only highest priority bucket gets returned", ->
-		nm = new NotificationManager ["a", "b", "c"], "priority"
-		equal nm._displayMethod, "priority", "check that value actually stuck"
-
-		nm.add new Notification "b", "message1"
-		nm.add new Notification "c", "message2"
-		nm.add new Notification "c", "message3"
-		
-		size = (x for x of nm.notifications()).length
-		equal size, 1, "should bring back only 1 bucket"
-
-		bucket = (x for x of nm.notifications())[0]
-		equal bucket, "b", "should bring back the correct bucket"
-
 	test "displayMethod = priority --> only highest priority bucket gets returned, even if dynamically introduced", ->
 		nm = new NotificationManager ["a", "b", "c"], "priority"
 		equal nm._displayMethod, "priority", "check that value actually stuck"
 
-		nm.add new Notification "e", "message1"
-		nm.add new Notification "f", "message2"
-		nm.add new Notification "g", "message3"
+		nm.add new Notification "e", "message4"
+		nm.add new Notification "f", "message5"
+		nm.add new Notification "g", "message6"
 		
-		size = (x for x of nm.notifications()).length
-		equal size, 1, "should bring back only 1 bucket"
+		equal Object::toString.call(nm.notifications()), "[object Array]", "return value is a list"
+		same nm.notifications(), ["message4"], "check the content"
 
-		bucket = (x for x of nm.notifications())[0]
-		equal bucket, "e", "should bring back the correct bucket"
+		nm.add new Notification "c", "message3"
+		equal Object::toString.call(nm.notifications()), "[object Array]", "return value is a list"
+		same nm.notifications(), ["message3"], "check the content"
 
-		nm.add new Notification "c", "message1"
-		size = (x for x of nm.notifications()).length
-		equal size, 1, "should bring back only 1 bucket"
-		bucket = (x for x of nm.notifications())[0]
-		equal bucket, "c", "should bring back the correct bucket"
-
-		nm.add new Notification "b", "message1"
-		size = (x for x of nm.notifications()).length
-		equal size, 1, "should bring back only 1 bucket"
-		bucket = (x for x of nm.notifications())[0]
-		equal bucket, "b", "should bring back the correct bucket"
+		nm.add new Notification "b", "message2"
+		equal Object::toString.call(nm.notifications()), "[object Array]", "return value is a list"
+		same nm.notifications(), ["message2"], "check the content"
 
 		nm.add new Notification "a", "message1"
-		size = (x for x of nm.notifications()).length
-		equal size, 1, "should bring back only 1 bucket"
-		bucket = (x for x of nm.notifications())[0]
-		equal bucket, "a", "should bring back the correct bucket"
+		equal Object::toString.call(nm.notifications()), "[object Array]", "return value is a list"
+		same nm.notifications(), ["message1"], "check the content"
 
-	test "displayMethod: 'priority' --> handles 0 messages correctly", ->
+	test "displayMethod: priority --> handles 0 messages correctly", ->
 		nm = new NotificationManager ["a", "b", "c"], "priority"
 		equal nm._displayMethod, "priority", "check that value actually stuck"
 
@@ -286,45 +280,55 @@ $ ->
 		equal size, 0, "shouldn't bring back any buckets"
 		same nm.notifications(), {}, "should have returned an empty map"
 
+	test "displayMethod = threshold --> returns all messages with a priority greater than a threshold", ->
+		nm = new NotificationManager ["a", "b", "c"], "threshold", "b"
+		equal nm._displayMethod, "threshold", "check that value actually stuck"
+
+		nm.add new Notification "a", "message1"
+		nm.add new Notification "a", "message2"
+		nm.add new Notification "b", "message3"
+		nm.add new Notification "b", "message4"
+		nm.add new Notification "c", "message5"
+		nm.add new Notification "c", "message6"
+
+		size = (x for x of nm.notifications()).length
+		equal size, 2, "should get 2 buckets back"
+		expected =
+			a: ["message1", "message2"],
+			b: ["message3", "message4"]
+		same nm.notifications(), expected, "should have returned correct messages"
+
+	test "displayMethod = threshold --> handles 0 messages correctly", ->
+		nm = new NotificationManager ["a", "b", "c"], "threshold", "b"
+		equal nm._displayMethod, "threshold", "check that value actually stuck"
+
+		size = (x for x of nm.notifications()).length
+		equal size, 0, "shouldn't bring back any buckets"
+		same nm.notifications(), {}, "should have returned an empty map"
+
+	module "Real World Usage"
+
+	test "logging", ->
+		FATAL = "FATAL"
+		CRITICAL = "CRITICAL"
+		ERROR = "ERROR"
+		WARN = "WARN"
+		INFO = "INFO"
+		DEBUG = "DEBUG"
+		TRACE = "TRACE"
+
+		nm = new NotificationManager [FATAL, CRITICAL, ERROR, WARN, INFO, DEBUG, TRACE], "threshold", INFO
+		nm.add new Notification DEBUG, "server is at 127.0.0.1/server/api/"
+		nm.add new Notification INFO, "establishing connection with server"
+		nm.add new Notification ERROR, "error contacting external server"
+		nm.add new Notification FATAL, "holy crap, the server caught on fire"
+	
+		expected = {}
+		expected[FATAL] = ["holy crap, the server caught on fire"]
+		expected[INFO] = ["establishing connection with server"]
+		expected[ERROR] = ["error contacting external server"]
+
+		same nm.notifications(), expected, "should match expected output exactly"
+
 	true
-
-#ERROR = "error"
-#WARN = "warning"
-#SUCCESS = "success"
-
-#manager = new NotificationManager [ERROR, WARN, SUCCESS]
-
-#err1 = new Notification ERROR, "error: must do something"
-#err2 = new Notification ERROR, "error: must do something else"
-#warn1 = new Notification WARN, "warning: maybe something"
-
-#manager.add err1
-#manager.add err2
-#manager.add warn1
-#manager.add new Notification "test", "test: test message"
-
-#alert(manager.totalSize())
-
-#alert(manager._displayMethod)
-#manager.setDisplayMethod "priority"
-#alert(manager._displayMethod)
-
-#alert(manager.get("errors").toSource())
-#alert(manager.get("nonexistent-bucket").toSource())
-
-#alert(manager.get().toSource())
-#manager.setDisplayMethod("all")
-#alert(manager.get().toSource())
-
-#alert(manager.listify("ul").toSource())
-#alert(manager.listify("ul", WARN).toSource())
-#alert(manager.listify("ul", 'bucket-that-doesnt-exist').toSource())
-
-#buckets = manager.buckets()
-#lists = manager.listify("ul")
-#for div in buckets
-#	alert("$('##{div}').hide()")
-#for div of lists
-#	alert("$('##{div}').append('#{lists[div]}')")
-#	alert("$('##{div}').show()")
 

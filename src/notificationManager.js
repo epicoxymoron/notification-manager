@@ -13,7 +13,7 @@ Notification = (function() {
   return Notification;
 })();
 NotificationManager = (function() {
-  function NotificationManager(buckets, displayMethod) {
+  function NotificationManager(buckets, displayMethod, displayArguments) {
     var bucket, _i, _len;
     if (buckets == null) {
       buckets = [];
@@ -28,7 +28,7 @@ NotificationManager = (function() {
       this._buckets[bucket] = [];
       this._bucketList.push(bucket);
     }
-    if (!this.setDisplayMethod(displayMethod)) {
+    if (!this.setDisplayMethod(displayMethod, displayArguments)) {
       this._displayMethod = "priority";
     }
   }
@@ -78,12 +78,23 @@ NotificationManager = (function() {
       return a + b;
     }), 0);
   };
-  NotificationManager.prototype.setDisplayMethod = function(method) {
-    if (method === "all" || method === "priority") {
-      this._displayMethod = method;
-      return true;
-    } else {
-      return false;
+  NotificationManager.prototype.setDisplayMethod = function(method, arg) {
+    switch (method) {
+      case "threshold":
+        if (__indexOf.call(this._bucketList, arg) >= 0) {
+          this._displayMethod = method;
+          this._displayThreshold = arg;
+          return true;
+        } else {
+          return false;
+        }
+        break;
+      case "all":
+      case "priority":
+        this._displayMethod = method;
+        return true;
+      default:
+        return false;
     }
   };
   NotificationManager.prototype.notifications = function() {
@@ -93,46 +104,17 @@ NotificationManager = (function() {
     for (_i = 0, _len = _ref.length; _i < _len; _i++) {
       bkt = _ref[_i];
       if (this._buckets[bkt].length > 0) {
-        retVal[bkt] = this._buckets[bkt];
         if (this._displayMethod === "priority") {
-          return retVal;
+          return this._buckets[bkt];
+        } else {
+          retVal[bkt] = this._buckets[bkt];
         }
+      }
+      if (this._displayMethod === "threshold" && this._displayThreshold === bkt) {
+        return retVal;
       }
     }
     return retVal;
-  };
-  NotificationManager.prototype.listify = function(container, bucket) {
-    var inner, message, messageList, messages, notes, retVal, _i, _len;
-    if (bucket == null) {
-      bucket = null;
-    }
-    if (container !== "ul" && container !== "ol") {
-      return {};
-    }
-    inner = "li";
-    retVal = "<" + container + ">";
-    if (bucket !== null) {
-      notes = {};
-      notes[bucket] = this.bucket(bucket);
-    } else {
-      notes = this.notifications();
-    }
-    for (bucket in notes) {
-      messages = notes[bucket];
-      if (messages.length > 0) {
-        messageList = "<" + container + ">";
-        for (_i = 0, _len = messages.length; _i < _len; _i++) {
-          message = messages[_i];
-          message = "<" + inner + ">" + message + "</" + inner + ">";
-          messageList += message;
-        }
-        messageList += "</" + container + ">";
-      } else {
-        messageList = "";
-      }
-      notes[bucket] = messageList;
-    }
-    return notes;
   };
   return NotificationManager;
 })();
