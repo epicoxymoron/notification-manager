@@ -278,7 +278,7 @@ $ ->
 
 		size = (x for x of nm.notifications()).length
 		equal size, 0, "shouldn't bring back any buckets"
-		same nm.notifications(), {}, "should have returned an empty map"
+		same nm.notifications(), [], "should have returned an empty list"
 
 	test "displayMethod = threshold --> returns all messages with a priority greater than a threshold", ->
 		nm = new NotificationManager ["a", "b", "c"], "threshold", "b"

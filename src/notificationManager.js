@@ -98,19 +98,48 @@ NotificationManager = (function() {
     }
   };
   NotificationManager.prototype.notifications = function() {
+    switch (this._displayMethod) {
+      case "all":
+        return this._notifications_all();
+      case "priority":
+        return this._notifications_priority();
+      case "threshold":
+        return this._notifications_threshold();
+    }
+  };
+  NotificationManager.prototype._notifications_all = function() {
     var bkt, retVal, _i, _len, _ref;
     retVal = {};
     _ref = this._bucketList;
     for (_i = 0, _len = _ref.length; _i < _len; _i++) {
       bkt = _ref[_i];
       if (this._buckets[bkt].length > 0) {
-        if (this._displayMethod === "priority") {
-          return this._buckets[bkt];
-        } else {
-          retVal[bkt] = this._buckets[bkt];
-        }
+        retVal[bkt] = this._buckets[bkt];
       }
-      if (this._displayMethod === "threshold" && this._displayThreshold === bkt) {
+    }
+    return retVal;
+  };
+  NotificationManager.prototype._notifications_priority = function() {
+    var bkt, _i, _len, _ref;
+    _ref = this._bucketList;
+    for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+      bkt = _ref[_i];
+      if (this._buckets[bkt].length > 0) {
+        return this._buckets[bkt];
+      }
+    }
+    return [];
+  };
+  NotificationManager.prototype._notifications_threshold = function() {
+    var bkt, retVal, _i, _len, _ref;
+    retVal = {};
+    _ref = this._bucketList;
+    for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+      bkt = _ref[_i];
+      if (this._buckets[bkt].length > 0) {
+        retVal[bkt] = this._buckets[bkt];
+      }
+      if (this._displayThreshold === bkt) {
         return retVal;
       }
     }

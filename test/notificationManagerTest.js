@@ -282,7 +282,7 @@ $(function() {
       return _results;
     })()).length;
     equal(size, 0, "shouldn't bring back any buckets");
-    return same(nm.notifications(), {}, "should have returned an empty map");
+    return same(nm.notifications(), [], "should have returned an empty list");
   });
   test("displayMethod = threshold --> returns all messages with a priority greater than a threshold", function() {
     var expected, nm, size, x;

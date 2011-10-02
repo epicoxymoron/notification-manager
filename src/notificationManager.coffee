@@ -1,14 +1,39 @@
-#### Notifications
+# The **NotificationManager** collects notifications and determines which ones are
+# important enough to return.
+#
+# There are a couple of different types of ways of determining which buckets
+# to return, and they have different rules associated with them.  So, without
+# further ado...
+#
+# * Setting displayMethod = "all" means that any time @notifications() is called,
+# all non-empty buckets will be returned.
+# * Setting displayMethod = "priority" means that the buckets added in the constructor
+# are assumed to be in a sorted order (highest-priority first), with any 
+# dynamically added buckets being of a lower priority than those entered on the 
+# constructor, and that when @notificaitons() is called, it will return the 
+# single highest-priority bucket that isn't empty.
+# * Setting displayMethod = "threshold" takes in an additional displayArgument, which 
+# corresponds to a bucket which must exist at the time the displayMethod is set.  For 
+# example, to construct the manager using the threshold setting, then the bucket marked 
+# as the threshold must be in the bucket list at the time of construction.  A 
+# **NotificationManager** instance can be turned into "threshold" mode at any time so 
+# long as the bucket marked as the threshold exists at the time of the setter.  So,
+# the following is legal:
+#
+#         nm = new NotificationManager ['a', 'b', 'c']
+#         nm.add new Notification 'x', 'message'
+#         nm.setDisplayMethod 'threshold', 'x'
 
+#### Notifications
+#
 # A **Notification** is really just a collection of the message itself and
 # the bucket it belongs to.
 class Notification
 	constructor: (@bucket, @message) ->
 
 #### The Manager
-
-# The **NotificationManager** collects the notifications and determines what's
-# important enough to display
+#
+# Handles the collection and logic of returning certain messages
 class NotificationManager
 
 	# Take in a list of bucket names ordered by their priority and a display
@@ -19,7 +44,7 @@ class NotificationManager
 		for bucket in buckets
 			@_buckets[bucket] = []
 			@_bucketList.push(bucket)
-		# take care to handle badly formed input
+		# Reject badly formed input
 		if not @setDisplayMethod displayMethod, displayArguments
 			@_displayMethod = "priority"
 
@@ -56,20 +81,11 @@ class NotificationManager
 
 	# Magically returns the number of messages stored across all buckets.
 	# To get the number of messages in a single bucket, it's just
-	# `manager.get(bucketName).length`
+	# `manager.bucket(bucketName).length`
 	totalSize: ->
 		(@_buckets[x].length for x of @_buckets).reduce ((a, b) -> a + b), 0
 
 	# Sets the display method if the value is valid
-	#
-	# Valid values are:
-	#
-	# * "all" will return all non-empty buckets and the messages contained in them.
-	# * "priority" will rank all buckets by priorty level and return all the messages 
-	# from the highest priority non-empty bucket.
-	# * "threshold" requires an extra argument which acts as the lower bound on the 
-	# priority level of returned messages.  returns all non-empty buckets of that
-	# priority level or higher.
 	setDisplayMethod: (method, arg) ->
 		switch method
 			when "threshold"
@@ -88,14 +104,30 @@ class NotificationManager
 	# Retrieves the relevant notifications based on the displayMethod
 	# and what's been stored
 	notifications: ->
+		switch @_displayMethod
+			when "all" then @_notifications_all()
+			when "priority" then @_notifications_priority()
+			when "threshold" then @_notifications_threshold()
+
+	_notifications_all: ->
 		retVal = {}
 		for bkt in @_bucketList
 			if @_buckets[bkt].length > 0
-				if @_displayMethod == "priority"
-					return @_buckets[bkt]
-				else
-					retVal[bkt] = @_buckets[bkt]
-			if @_displayMethod == "threshold" and @_displayThreshold == bkt
-				return retVal
+				retVal[bkt] = @_buckets[bkt]
 		return retVal
 	
+	_notifications_priority: ->
+		for bkt in @_bucketList
+			if @_buckets[bkt].length > 0
+				return @_buckets[bkt]
+		return []
+	
+	_notifications_threshold: ->
+		retVal = {}
+		for bkt in @_bucketList
+			if @_buckets[bkt].length > 0
+				retVal[bkt] = @_buckets[bkt]
+			if @_displayThreshold == bkt
+				return retVal
+		return retVal
+		
